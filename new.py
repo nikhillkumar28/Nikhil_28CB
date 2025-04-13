@@ -4,9 +4,10 @@ import json
 import bot
 import time
 import os
+
+from urllib.parse import urlparse, parse_qs
 from datetime import datetime
 
-# st.set_page_config(layout="wide")
 
 events_file = "events.json"
 users_file = "users.json"
@@ -45,6 +46,15 @@ def validate_user(username, password):
 for key in ["messages", "show_form", "selected_option", "user_details", "logged_in", "username"]:
     if key not in st.session_state:
         st.session_state[key] = [] if key == "messages" else False if key == "logged_in" else None if key == "selected_option" else ""
+
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
+
+if "active_section" not in st.session_state:
+    st.session_state.active_section = "Chat"
+
+if "dashboard_visible" not in st.session_state:
+    st.session_state.dashboard_visible = True
 
 # Styles
 st.markdown("""
@@ -109,92 +119,97 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-col1, col2 = st.columns([1, 2])
-with col1:
-    # Set the default active section on first load
-    if "active_section" not in st.session_state:
-        st.session_state.active_section = "Chat"
+col1, col2 ,col3 = st.columns([1.5,3, 1.5])
 
-    st.markdown("""
-        <style>
-            .left-pane {
-                padding: 20px 15px;
-                background-color: #0f0f0f;
-                border-right: 1px solid #333;
-                border-radius: 12px 0 0 12px;
-                height: 50vh;
-                max-width: 270px;
-                overflow-y: auto;
-            }
+if st.session_state.get("logged_in") and st.session_state.get("active_section") == "Chat":
+    with col1:
+        # Inject CSS
+        st.markdown("""
+    <style>
+        .dashboard-container {
+            position: fixed;
+            top: 200px;
+            left: 0;
+            width: 270px;
+            background-color: #0f0f0f;
+            padding: 25px 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(0, 255, 255, 0.4);  /* MATCHED FAQ BORDER */
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3); /* MATCHED FAQ SHADOW */
+            z-index: 9999;
+        }
 
-            .left-pane h2 {
-                color: white;
-                font-size: 26px;
-                margin-bottom: 30px;
-            }
+        .dashboard-box-title {
+            text-align: center;
+            font-size: 28px;
+            color: #38ef7d;
+            margin-bottom: 20px;
+            font-weight: bold;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #38ef7d50;
+        }
 
-            .nav-links a {
-                display: block;
-                margin-bottom: 20px;
-                font-size: 17px;
-                color: white;
-                text-decoration: none;
-                padding-left: 5px;
-            }
+        .dashboard-container a {
+            display: block;
+            margin: 12px 0;
+            font-size: 16px;
+            color: #ccc;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
 
-            .nav-links a:hover {
-                text-decoration: underline;
-                color: #ccc;
-            }
-        </style>
+        .dashboard-container a:hover {
+            color: #38ef7d;
+            text-shadow: 0 0 5px #38ef7d;
+            transform: translateX(5px);
+        }
 
-        <div class='left-pane'>
-            <h2>🐕 Pet Dashboard</h2>
-            <div class='nav-links'>
-                <a href="#" onclick="fetch('/?section=Schedule').then(() => window.location.reload());">📅 Schedule Appointment</a>
-                <a href="#" onclick="fetch('/?section=Tips').then(() => window.location.reload());">📖 Learn Pet Tips</a>
-                <a href="#" onclick="fetch('/?section=Chat').then(() => window.location.reload());">💬 Chat with Bot</a>
-                <a href="#" onclick="fetch('/?section=Settings').then(() => window.location.reload());">⚙️ Settings</a>
-            </div>
-        </div>
-    """, unsafe_allow_html=True)
+        .block-container {
+            padding-left: 280px !important;
+        }
+    </style>
+""", unsafe_allow_html=True)
 
-    # Simulated JavaScript-triggered section change
-    query_params = st.query_params
-    if "section" in query_params:
-        st.session_state.active_section = query_params["section"][0]
+# Inject HTML
+        st.markdown("""
+    <div class="dashboard-container">
+        <div class="dashboard-box-title">🐕 Pet Dashboard</div>
+        <a href="#" onclick="fetch('/?section=Schedule').then(() => window.location.reload());">📅 Schedule Appointment</a>
+        <a href="#" onclick="fetch('/?section=Tips').then(() => window.location.reload());">📖 Learn Pet Tips</a>
+        <a href="#" onclick="fetch('/?section=Chat').then(() => window.location.reload());">💬 Support</a>
+        <a href="#" onclick="fetch('/?section=Settings').then(() => window.location.reload());">⚙️ Settings</a>
+        <a href="https://www.pawlicy.com/blog/pet-care/">📖 Read Blogs</a> 
+    </div>
+""", unsafe_allow_html=True)
 
 
 
 with col2:
+
+
     if not st.session_state.logged_in:
         # --- LOGIN / REGISTER PAGE ---
         st.markdown("""
 <style>
     .welcome-box {
-        background: linear-gradient(135deg, #f7d9ff, #cdb4db);
-        padding: 15px;
-        border-radius: 20px;
-        text-align: center;
-        font-size: 24px;
-        font-family: 'Fredoka', sans-serif;
-        color: #5a189a;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        margin-bottom: 10px;
-    }
-
-    .info-text {
-        font-size: 18px;
-        text-align: center;
-        font-family: 'Segoe UI', sans-serif;
-        color: #b39ddb;
-        margin-bottom: 20px;
-    }
+    background: linear-gradient(135deg, #f7d9ff, #cdb4db);
+    padding: 30px 20px;
+    border-radius: 25px;
+    text-align: center;
+    font-size: 22px;
+    width: 100%;                  /* Change this value as needed */
+    max-width: 800px;            /* Allow it to be wider than 500px */
+    margin-left: auto;
+    margin-right: auto;
+    font-family: 'Fredoka', sans-serif;
+    color: #5a189a;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+    overflow-wrap: break-word;
+}
 </style>
-
-<div class="welcome-box"><b>
-    🐼 𝓦𝓔𝓛𝓒𝓞𝓜𝓔 ! ! 🐼</b><br>
-    <b>⫘⫘⫘⫘⫘⫘⫘⫘⫘⫘</b>
+<div class="welcome-box">
+    <b>🐼 🐇 𝖂𝖊𝖑𝖈𝖔𝖒𝖊 𝖙𝖔 𝕻𝖊𝖙𝕭𝖔𝖙 🐇 🐼</b>
 </div>
 
 <div class="info-text">
@@ -227,12 +242,10 @@ with col2:
         st.stop()
 
     else:
-        # --- MAIN APP CONTENT AFTER LOGIN ---
         active = st.session_state.active_section
 
         if active == "Schedule":
             st.header("📅 Schedule Appointment")
-            # 👉 Paste your schedule form logic here
             st.info("This is where the scheduling form will go.")
 
         elif active == "Tips":
@@ -249,10 +262,8 @@ with col2:
             st.header("⚙️ Settings")
             st.info("Settings features coming soon.")
 
-        else:  # Default to Chat
-            st.header("💬 Chat with Pet Care Bot")
-            # 👉 Paste your chatbot interaction code here
-            # Display content based on the selected dashboard section
+        else:
+            st.header("")
             if st.session_state.active_section == "schedule":
                 st.markdown("### 📅 Schedule an Appointment")
                 st.session_state.selected_option = st.radio("Choose an option:", ("Participate in grooming session", "Book an appointment"), index=0)
@@ -271,51 +282,188 @@ with col2:
                         response = save_event(event_name, event_time, st.session_state.selected_option, st.session_state.user_details)
                         st.success(response)
 
-            elif st.session_state.active_section == "tips":
-                st.markdown("### 📖 Learn Pet Tips")
-                st.markdown("""
-                - 🐕 Brush your pet regularly to avoid matting.
-                - 🐾 Ensure regular vet checkups.
-                - 🥗 Feed a balanced diet and provide clean water.
-                - 🚶 Give your pet daily exercise and attention.
-                """)
-
             elif st.session_state.active_section == "chat":
-                st.markdown("### 💬 Chat with Pet Care Bot")
+                st.markdown("")
+
+                if "messages" not in st.session_state:
+                    st.session_state.messages = []
+
+                if not any(msg["role"] == "assistant" for msg in st.session_state.messages):
+                    username = st.session_state.get("username", "there")
+                    greeting = f"👋 Hello {username.capitalize()}! Welcome back to Pet Care Bot 🐾"
+
+                    greeting_placeholder = st.empty()
+                    for _ in range(3):
+                        greeting_placeholder.markdown(
+                            "<div class='chat-container assistant-message'>...</div><div class='clearfix'></div>",
+                            unsafe_allow_html=True
+                        )
+                        time.sleep(0.4)
+                        greeting_placeholder.markdown("", unsafe_allow_html=True)
+                        time.sleep(0.4)
+
+                    greeting_placeholder.markdown(
+                        f"<div class='chat-container assistant-message'>{greeting}</div><div class='clearfix'></div>",
+                        unsafe_allow_html=True
+                    )
+                    st.session_state.messages.append({"role": "assistant", "content": greeting})
+
                 for message in st.session_state.messages:
                     align_class = "user-message" if message["role"] == "user" else "assistant-message"
                     st.markdown(f"""
-                    <div class='chat-container {align_class}'>{message['content']}</div>
-                    <div class='clearfix'></div>
+                        <div class='chat-container {align_class}'>{message['content']}</div>
+                        <div class='clearfix'></div>
                     """, unsafe_allow_html=True)
 
                 if prompt := st.chat_input("Ask me about pet care or schedule an event..."):
                     st.session_state.messages.append({"role": "user", "content": prompt})
                     response = bot.chatbot(prompt)
 
-        # Simulate typing...
                     message_placeholder = st.empty()
                     for _ in range(3):
-                        message_placeholder.markdown("""<div class='chat-container assistant-message'>...</div><div class='clearfix'></div>""", unsafe_allow_html=True)
+                        message_placeholder.markdown(
+                            """<div class='chat-container assistant-message'>...</div><div class='clearfix'></div>""",
+                            unsafe_allow_html=True
+                        )
                         time.sleep(0.5)
                         message_placeholder.markdown("", unsafe_allow_html=True)
                         time.sleep(0.5)
 
                     st.session_state.messages.append({"role": "assistant", "content": response})
-                    st.markdown(f"""<div class='chat-container assistant-message'>{response}</div><div class='clearfix'></div>""", unsafe_allow_html=True)
+                    st.markdown(
+                        f"""<div class='chat-container assistant-message'>{response}</div><div class='clearfix'></div>""",
+                        unsafe_allow_html=True
+                    )
 
             elif st.session_state.active_section == "settings":
                 st.markdown("### ⚙️ Settings")
                 st.write("🔐 Feature coming soon: update preferences, theme toggles, etc.")
 
-            
+st.markdown("""
+<style>
+.footer-fixed {
+    position: fixed;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    font-size: 13px;
+    color: #888;
+    z-index: 9999;
+}
+</style>
+<div class="footer-fixed">👨‍💻𝕸𝖆𝖉𝖊 𝖇𝖞 12318964 12313000 12317117• 𝕻𝖊𝖙𝕭𝖔𝖙 © 2025</div>
+""", unsafe_allow_html=True)
 
 
+with col3:
+    
+    st.markdown("""
+<style>
+.faq-wrapper {
+position: fixed;
+            top: 200px;
+            left: 0;
+            width: 270px;
+            background-color: #0f0f0f;
+            padding: 25px 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(0, 255, 255, 0.4);  /* MATCHED FAQ BORDER */
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3); /* MATCHED FAQ SHADOW */
+            z-index: 999;
+}
+
+.faq-title {
+    text-align: center;
+    font-size: 24px;
+    font-weight: bold;
+    color: #38ef7d;
+                margin-top:60px;
+    margin-bottom: 20px;
+}
+
+details {
+    
+  background: rgba(0, 0, 0, 0.2); /* transparent dark */
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 255, 255, 0.4);
+  border-radius: 12px;
+  color: #ccc;
+  padding: 8px;
 
 
+    # background-color:2c2c3e;
+    padding: 8px 12px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    max-width: 480px;
+    width: 100%;
+    box-shadow: 0 0 10px rgba(56, 239, 125, 0.3);
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s;
+    cursor: pointer;
+}
 
-# --- Continue Chatbot and Scheduler UI (unchanged) ---
-# Use your same code for chatbot UI and form handling after login.
+details:hover {
+
+  border: 2px solid transparent;
+  background-image: linear-gradient(#1f1f1f, #1f1f1f),
+                    radial-gradient(circle at top left, #00ffff, #0066ff);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.3), 0 0 20px rgba(0, 255, 255, 0.3);
+  border-radius: 14px;
+  transition: all 0.4s ease;
+
+    transform: scale(1.02);
+    box-shadow: 0 0 15px rgba(56, 239, 125, 0.4);
+    transition: all 0.3s ease-in-out;
+    background-color: #08e1e5; /* subtle dark tone for hover */
+    border-radius: 12px;
+    color: #f0ed13; /* bright aqua text on hover */
+}
+
+
+summary {
+    font-weight:normal;
+    color: #e0e0e0;
+    font-size: 15px;
+    outline: none;
+}
+
+details[open] summary {
+    color: #2f855a;
+}
+
+.faq-answer {
+    margin-top: 10px;
+    color: #555;
+    font-size: 13px;
+}
+</style>
+""", unsafe_allow_html=True)
+
+    st.markdown('<div class="faq-wrapper">', unsafe_allow_html=True)
+    st.markdown('<div class="faq-title"> FAQs </div>', unsafe_allow_html=True)
+
+    faqs = {
+    "🐾 How do I book an appointment?": "You can book an appointment by selecting a slot [here](#).",
+    "📅 What are the available grooming slots?": "Available slots are listed [here](#).",
+    "❌ How do I cancel an appointment?": "You can cancel it by visiting [this page](#).",
+    "📌 Where can I check my scheduled events?": "Check your events in the dashboard [here](#)."
+}
+
+    for question, answer in faqs.items():
+        st.markdown(f"""
+    <details>
+        <summary>{question}</summary>
+        <div class="faq-answer">{answer}</div>
+    </details>
+    """, unsafe_allow_html=True)
+
+    st.markdown('</div>', unsafe_allow_html=True)
+
+  
 
 if "welcome_shown" not in st.session_state:
     st.session_state.welcome_shown = True
@@ -344,7 +492,7 @@ if "welcome_shown" not in st.session_state:
             </div>
         """, unsafe_allow_html=True)
     
-    time.sleep(3)  # Show message for 3 seconds
+    time.sleep(2)  # Show message for 3 seconds
     welcome_placeholder.empty()  # Remove it after 3s
 
 # Title
@@ -421,16 +569,13 @@ header {visibility: hidden;}
 
 <div class="navbar">
     <div></div> <!-- Left empty column -->
-    <div class="logo">🐶 Pet Care Bot</div>
+    <div class="logo"> 🐕‍🦺 Pet Care Bot</div>
     <div class="nav-links">
         <a href="#dashboard">Dashboard</a>
         <button class="toggle-btn">☀️ Theme</button>
     </div>
 </div>
 """, unsafe_allow_html=True)
-
-
-        
 
 # Chat styles
 st.markdown("""
@@ -463,7 +608,8 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Display chat messages
+
+
 for message in st.session_state.messages:
     align_class = "user-message" if message["role"] == "user" else "assistant-message"
     st.markdown(f"""
@@ -507,6 +653,7 @@ if prompt := st.chat_input("Ask me about pet care or schedule an event..."):
         """, unsafe_allow_html=True)
         st.session_state.messages.append({"role": "assistant", "content": response})
 
+
 # Show scheduling form
 if st.session_state.show_form:
     st.markdown("**Would you like to:**")
@@ -526,4 +673,5 @@ if st.session_state.show_form:
             st.session_state.messages.append({"role": "assistant", "content": response})
             st.success(response)
             st.session_state.show_form = False
+
 st.markdown('</div>', unsafe_allow_html=True)
