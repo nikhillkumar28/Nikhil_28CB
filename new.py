@@ -103,15 +103,18 @@ st.markdown("""
         float: right;
         color: #1A1A1A;
         border: 1px solid #A4D3A2;
+            margin-right:28px;
     }
 
     .assistant-message {
-        background-color: #EAEAEA;
-        text-align: left;
-        float: left;
-        color: #333333;
-        border: 1px solid #C0C0C0;
-    }
+    background-color: #EAEAEA;
+    text-align: left;
+    float: left;
+    color: #333333;
+    border: 1px solid #C0C0C0;
+    margin-left: 28px; /* 👈 Add this line */
+}
+
 
     .clearfix {
         clear: both;
@@ -119,7 +122,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-col1, col2 ,col3 = st.columns([1.5,3, 1.5])
+col1, col2 ,col3 = st.columns([1.5,3,1])
 
 if st.session_state.get("logged_in") and st.session_state.get("active_section") == "Chat":
     with col1:
@@ -129,13 +132,13 @@ if st.session_state.get("logged_in") and st.session_state.get("active_section") 
         .dashboard-container {
             position: fixed;
             top: 200px;
-            left: 0;
+            left: 10px;
             width: 270px;
             background-color: #0f0f0f;
             padding: 25px 20px;
             border-radius: 12px;
-            border: 1px solid rgba(0, 255, 255, 0.4);  /* MATCHED FAQ BORDER */
-            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3); /* MATCHED FAQ SHADOW */
+            border: 1px solid rgba(0, 255, 255, 0.4); 
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3); 
             z-index: 9999;
         }
 
@@ -172,18 +175,18 @@ if st.session_state.get("logged_in") and st.session_state.get("active_section") 
 
 # Inject HTML
         st.markdown("""
+
     <div class="dashboard-container">
         <div class="dashboard-box-title">🐕 Pet Dashboard</div>
-        <a href="#" onclick="fetch('/?section=Schedule').then(() => window.location.reload());">📅 Schedule Appointment</a>
-        <a href="#" onclick="fetch('/?section=Tips').then(() => window.location.reload());">📖 Learn Pet Tips</a>
-        <a href="#" onclick="fetch('/?section=Chat').then(() => window.location.reload());">💬 Support</a>
-        <a href="#" onclick="fetch('/?section=Settings').then(() => window.location.reload());">⚙️ Settings</a>
-        <a href="https://www.pawlicy.com/blog/pet-care/">📖 Read Blogs</a> 
+        <a href="#" onclick="showComingSoon(event)">📅 Schedule Appointment</a>
+        <a href="https://thebetterindia.com/419128/summer-pets-care-heat-animal-wellness/" target="_blank">👩🏻‍💻 Learn Pet Tips</a>
+        <a href="#" onclick="showComingSoon(event)">💬 Support</a>
+        <a href="#" onclick="showComingSoon(event)">⚙️ Settings</a>
+        <a href="https://www.pawlicy.com/blog/pet-care/" target="_blank">📖 Read Blogs</a> 
     </div>
-""", unsafe_allow_html=True)
-
-
-
+""", unsafe_allow_html=True)   
+      
+        
 with col2:
 
 
@@ -443,25 +446,25 @@ details[open] summary {
 </style>
 """, unsafe_allow_html=True)
 
-    st.markdown('<div class="faq-wrapper">', unsafe_allow_html=True)
-    st.markdown('<div class="faq-title"> FAQs </div>', unsafe_allow_html=True)
+    # st.markdown('<div class="faq-wrapper">', unsafe_allow_html=True)
+    # st.markdown('<div class="faq-title"> FAQs </div>', unsafe_allow_html=True)
 
-    faqs = {
-    "🐾 How do I book an appointment?": "You can book an appointment by selecting a slot [here](#).",
-    "📅 What are the available grooming slots?": "Available slots are listed [here](#).",
-    "❌ How do I cancel an appointment?": "You can cancel it by visiting [this page](#).",
-    "📌 Where can I check my scheduled events?": "Check your events in the dashboard [here](#)."
-}
+#     faqs = {
+#     "🐾 How do I book an appointment?": "You can book an appointment by selecting a slot [here](#).",
+#     "📅 What are the available grooming slots?": "Available slots are listed [here](#).",
+#     "❌ How do I cancel an appointment?": "You can cancel it by visiting [this page](#).",
+#     "📌 Where can I check my scheduled events?": "Check your events in the dashboard [here](#)."
+# }
 
-    for question, answer in faqs.items():
-        st.markdown(f"""
-    <details>
-        <summary>{question}</summary>
-        <div class="faq-answer">{answer}</div>
-    </details>
-    """, unsafe_allow_html=True)
+#     for question, answer in faqs.items():
+#         st.markdown(f"""
+#     <details>
+#         <summary>{question}</summary>
+#         <div class="faq-answer">{answer}</div>
+#     </details>
+#     """, unsafe_allow_html=True)
 
-    st.markdown('</div>', unsafe_allow_html=True)
+#     st.markdown('</div>', unsafe_allow_html=True)
 
   
 
@@ -594,14 +597,17 @@ st.markdown("""
         float: right;
         color: #1A1A1A;
         border: 1px solid #A4D3A2;
+        margin-right:28px;
     }
     .assistant-message {
-        background-color: #EAEAEA;
-        text-align: left;
-        float: left;
-        color: #333333;
-        border: 1px solid #C0C0C0;
-    }
+    background-color: #EAEAEA;
+    text-align: left;
+    float: left;
+    color: #333333;
+    border: 1px solid #C0C0C0;
+    margin-left: 28px; /* 👈 Add this line */
+}
+
     .clearfix {
         clear: both;
     }
